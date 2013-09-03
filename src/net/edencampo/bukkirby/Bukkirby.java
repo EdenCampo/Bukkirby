@@ -1,9 +1,13 @@
 package net.edencampo.bukkirby;
 
-import java.util.HashMap;
+import net.edencampo.bukkirby.BukkirbyListener;
 
+import java.util.HashMap;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Effect;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -44,11 +48,15 @@ public class Bukkirby extends JavaPlugin
 	BukkirbyLogger BKirbyLog = new BukkirbyLogger(this);
 	BukkirbyListener BKirbyListener = new BukkirbyListener(this);
 	BukkirbyAbilityManager BKirbyAB = new BukkirbyAbilityManager(this);
+	BukkirbySpiderLadderManager BukkirbySPL = new BukkirbySpiderLadderManager(this);
 	
 	public String KirbyTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "Bukkirby" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
 	public void onEnable()
 	{
+		saveDefaultConfig();
+		reloadConfig();
+		
 		Bukkit.getPluginManager().registerEvents(BKirbyListener, this);
 		
 		for(Player p : Bukkit.getServer().getOnlinePlayers())
@@ -66,5 +74,33 @@ public class Bukkirby extends JavaPlugin
 		BKirbyListener.ValidCreatures.clear();
 		
 		BKirbyLog.logInfo("Successfully disabled!");
+	}
+	
+	public boolean onCommand(CommandSender sender, Command cmd, String CommandLabel, String[] args) 
+	{
+		if(sender instanceof Player)
+		{
+			Player player = (Player)sender;
+			
+			if(cmd.getName().equalsIgnoreCase("kirbyability") || cmd.getName().equalsIgnoreCase("ka"))
+			{
+				if(args.length != 1)
+				{
+					player.sendMessage(KirbyTag + "Usage: /kirbyability <ability>");
+					return true;
+				}
+				
+				String ability = args[0];
+				
+				player.sendMessage(KirbyTag + "Successfully set own ability to - ABILITY_" + ability.toUpperCase());
+				BKirbyAB.setPlayerAbility(player, "ABILITY_" + ability.toUpperCase());
+				
+				player.getWorld().playEffect(player.getLocation(), Effect.ENDER_SIGNAL, 0);
+				player.getWorld().playEffect(player.getLocation(), Effect.BLAZE_SHOOT, 0);
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }

@@ -2,3 +2,11 @@ name: Bukkirby
 main: net.edencampo.bukkirby.Bukkirby
 version: 1.0.0
 author: Eden.Campo
+
+commands:
+  kirbyability:
+      description: Set your kirby ability
+      usage: /<command> <Ability>
+  ka:
+      description: Set your kirby ability
+      usage: /<command> <Ability>

@@ -5,8 +5,12 @@ import java.util.List;
 import java.util.Random;
 
 import net.edencampo.bukkirby.Bukkirby.PlayerAbility;
+import net.minecraft.server.v1_6_R2.Item;
 
+import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Egg;
 import org.bukkit.entity.Entity;
@@ -19,8 +23,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.potion.PotionEffectType;
 
 public class BukkirbyListener implements Listener 
@@ -33,10 +39,28 @@ public class BukkirbyListener implements Listener
 	}
 
 	List<String> ValidCreatures = new ArrayList<String>();
+	List<Location> invisladders = new ArrayList<Location>();
 	
+	Player moveplayer;
+	Location moveloc;
 	
 	public void addValidCreatures()
 	{
+		String AllowedMobs = plugin.getConfig().getString("AllowedMobs");
+		
+		String[] AllowedMobsSplit = AllowedMobs.split(", ");
+		
+		int id = 0;
+		while(id < AllowedMobsSplit.length)
+		{
+			ValidCreatures.add(AllowedMobsSplit[id]);
+			
+			plugin.BKirbyLog.logInfo("Added valid mob: " + AllowedMobsSplit[id]);
+			
+			id++;
+		}
+		
+		/*
 		ValidCreatures.add("creeper");
 		ValidCreatures.add("enderman");
 		ValidCreatures.add("zombie");
@@ -48,6 +72,7 @@ public class BukkirbyListener implements Listener
 		ValidCreatures.add("pigzombie");
 		ValidCreatures.add("blaze");
 		ValidCreatures.add("ghast");
+		*/
 	}
 	
 	@EventHandler
@@ -69,6 +94,9 @@ public class BukkirbyListener implements Listener
 					p.sendMessage(plugin.KirbyTag + "You hit a " + creature + "! You have received his abilities!");
 					plugin.BKirbyAB.setPlayerAbility(p, "ABILITY_" + creature.toUpperCase());
 					p.sendMessage(plugin.KirbyTag + "DEBUG: " + plugin.BKirbyAB.getCurrentAbility(p));
+					
+					p.getWorld().playEffect(p.getLocation(), Effect.ENDER_SIGNAL, 0);
+					p.getWorld().playEffect(p.getLocation(), Effect.BLAZE_SHOOT, 0);
 				}
 			}
 			else
@@ -90,15 +118,17 @@ public class BukkirbyListener implements Listener
 					
 			if(currentability.equalsIgnoreCase("ABILITY_ENDERMAN"))
 			{
-				Location eyepos = p.getEyeLocation();
-				p.teleport(eyepos);
+				if(p.getItemInHand().equals(Item.ENDER_PEARL))
+				{
+					Block blockloc = p.getTargetBlock(null, 15);
+					p.teleport(blockloc.getLocation());	
+				}
 			}
 			else if(currentability.equalsIgnoreCase("ABILITY_SKELETON"))
 			{	
 				if(e.getItem() == null)
 				{
-					Arrow arrow = p.launchProjectile(Arrow.class);
-					arrow.remove();
+					p.launchProjectile(Arrow.class);
 				}
 			}
 			else if(currentability.equalsIgnoreCase("ABILITY_BLAZE"))
@@ -139,21 +169,11 @@ public class BukkirbyListener implements Listener
 			
 			if(damagerability.equalsIgnoreCase("ABILITY_ZOMBIE"))
 			{
-				Object damage = e.getDamage();
+				double damage = e.getDamage();
 				
-				String newndamage = damage.toString() + "2.5";
+				double newndamage = damage + 5.0;
 				
-				double finaldamage = 0;
-				try
-				{
-					finaldamage = Integer.parseInt(newndamage);
-				}
-				catch(NumberFormatException ex)
-				{
-					ex.printStackTrace();
-				}
-				
-				e.setDamage(finaldamage);
+				e.setDamage(newndamage);
 			}
 			else if(damagerability.equalsIgnoreCase("ABILITY_CAVESPIDER"))
 			{
@@ -171,7 +191,134 @@ public class BukkirbyListener implements Listener
 					}
 				}
 			}
+			else if(damagerability.equalsIgnoreCase("ABILITY_IRONGOLEM"))
+			{
+				if(damaged instanceof Player)
+				{
+					/**
+					 * Author of snippet: MrSugarCaney
+					 */
+					
+					Player damagedp = (Player)damaged;
+					
+		            Location loc = damagedp.getLocation();
+		            loc.add(0.5D, 0.5D, 0.5D);
+		            boolean check = true;
+		            while (check) 
+		            {
+		              if (loc.getBlock().getType() == Material.AIR) 
+		              {
+		                loc.add(0.0D, 1.0D, 0.0D);
+		                if (loc.getBlock().getType() == Material.AIR) 
+		                {
+		                  loc.add(0.0D, -1.0D, 0.0D);
+
+		                  for (int i = 1; i <= 8; i++) 
+		                  {
+		                    if (loc.add(0.0D, 1.0D, 0.0D).getBlock().getType() != Material.AIR) 
+		                    {	
+		                      check = true;
+		                      break;
+		                    }
+		                    if (i == 8) 
+		                    {
+		                      damagedp.teleport(loc);
+		                      check = false;
+		                      break;
+		                    }
+		                  }
+		                }
+		                else 
+		                {
+		                  loc.add(0.0D, -1.0D, 0.0D);
+		                }
+		              }
+		              loc.add(0.0D, 1.0D, 0.0D);
+		            }
+				}
+			}
 		}
+	}
+	
+	@SuppressWarnings("deprecation")
+	@EventHandler
+	public void onMove(PlayerMoveEvent e)
+	{
+		Player p = e.getPlayer();
+		
+		moveplayer = e.getPlayer();
+		
+		Block blockfacing = p.getTargetBlock(null, 1);
+		
+		double byaxiS = blockfacing.getY();
+		double pyaxiS = p.getLocation().getY();
+		
+		double bxaxiS = blockfacing.getX();
+		double pxaxiS = p.getLocation().getX();
+		
+		if(blockfacing.getType() == Material.AIR || !p.isOnGround())
+		{
+			return;
+		}
+		
+		if(byaxiS > pyaxiS && bxaxiS > pxaxiS)
+		{
+			String currentability = plugin.BKirbyAB.getCurrentAbility(p);
+			
+			if(currentability.equalsIgnoreCase("ABILITY_SPIDER"))
+			{
+				//Bukkit.getServer().broadcastMessage("Blockfacing bxaxiS = " + bxaxiS);
+				//Bukkit.getServer().broadcastMessage("Player pxaxiS = " + pxaxiS);
+				
+				Location loc = p.getLocation();
+				
+				moveloc = p.getLocation();
+				
+				loc.add(0.0D, 1.0D, 0.0D);	
+				moveloc.add(0.0D, 1.0D, 0.0D);	
+				
+				p.sendBlockChange(loc, Material.LADDER, (byte) 0);
+				invisladders.add(loc);
+				
+				loc.add(0.0D, 1.0D, 0.0D);	
+				moveloc.add(0.0D, 1.0D, 0.0D);	
+				
+				p.sendBlockChange(loc, Material.LADDER, (byte) 0);
+				invisladders.add(loc);
+				
+				plugin.getServer().getScheduler().runTaskLater(plugin, plugin.BukkirbySPL, 60L);
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onArrowHit(ProjectileHitEvent e)
+	{
+		if(e.getEntity() instanceof Arrow)
+		{	
+			Arrow arrow = (Arrow) e.getEntity();
+			
+			Entity shooter = arrow.getShooter();
+			
+			if(shooter instanceof Player)
+			{
+				Player pshooter = (Player) arrow.getShooter();
+				
+				String currentability = plugin.BKirbyAB.getCurrentAbility(pshooter);
+				
+				if(currentability.equalsIgnoreCase("ABILITY_SKELETON"))
+				{
+					arrow.remove();
+				}
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onPlayerJoin(PlayerJoinEvent e)
+	{
+		Player p = e.getPlayer();
+		plugin.BKirbyAB.setPlayerAbility(p, PlayerAbility.ABILITY_NONE.toString());
 	}
 	
 	@EventHandler
@@ -199,10 +346,7 @@ public class BukkirbyListener implements Listener
 	/*
 	 * 	public enum PlayerAbility - TODO LIST
 	{
-		ABILITY_ZOMBIE(WORKS?),
-		ABILITY_SPIDER,
 		ABILITY_CAVESPIDER(WORKS?),
-		ABILITY_IRONGOLEM,
 		ABILITY_PIGZOMBIE,
 	}
 	 */

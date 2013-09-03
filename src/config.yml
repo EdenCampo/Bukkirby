@@ -1,0 +1,13 @@
+# Default Configuration for 'Bukkirby' - Eden.Campo
+
+# Enable auto-updating or not?
+
+autoUpdate: true
+
+# List alloed mob targets here.
+
+AllowedMobs: creeper, enderman, zombie, skeleton, spider, cavespider, irongolem, snowgolem, pigzombie, blaze, ghast
+
+
+# Currently isn't used...
+AllowedAbilities: ABILITY_CREEPER, ABILITY_ENDERMAN, ABILITY_ZOMBIE, ABILITY_SKELETON, ABILITY_SPIDER, ABILITY_CAVESPIDER, ABILITY_IRONGOLEM, ABILITY_SNOWGOLEM, ABILITY_PIGZOMBIE, ABILITY_BLAZE, ABILITY_GHAST 

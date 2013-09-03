@@ -1,7 +1,5 @@
 package net.edencampo.bukkirby;
 
-import org.bukkit.plugin.PluginDescriptionFile;
-
 public class BukkirbyLogger
 {
 	Bukkirby plugin;
@@ -13,19 +11,16 @@ public class BukkirbyLogger
 	
 	public void logSevereError(String msg)
 	{
-		PluginDescriptionFile pdFile = plugin.getDescription();
-		plugin.getLogger().severe(pdFile.getName() + " " + pdFile.getVersion() + ": " + msg);
+		plugin.getLogger().severe(msg);
 	}
 	
 	public void logWarning(String msg)
 	{
-		PluginDescriptionFile pdFile = plugin.getDescription();
-		plugin.getLogger().warning(pdFile.getName() + " " + pdFile.getVersion() + ": " + msg);
+		plugin.getLogger().warning(msg);
 	}
 	
 	public void logInfo(String msg)
 	{	
-		PluginDescriptionFile pdFile = plugin.getDescription();
-		plugin.getLogger().info(pdFile.getName() + " " + pdFile.getVersion() + ": " + msg);
+		plugin.getLogger().info(msg);
 	}
 }
