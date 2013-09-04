@@ -48,7 +48,6 @@ public class Bukkirby extends JavaPlugin
 	BukkirbyLogger BKirbyLog = new BukkirbyLogger(this);
 	BukkirbyListener BKirbyListener = new BukkirbyListener(this);
 	BukkirbyAbilityManager BKirbyAB = new BukkirbyAbilityManager(this);
-	BukkirbySpiderLadderManager BukkirbySPL = new BukkirbySpiderLadderManager(this);
 	
 	public String KirbyTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "Bukkirby" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
@@ -97,6 +96,7 @@ public class Bukkirby extends JavaPlugin
 				
 				player.getWorld().playEffect(player.getLocation(), Effect.ENDER_SIGNAL, 0);
 				player.getWorld().playEffect(player.getLocation(), Effect.BLAZE_SHOOT, 0);
+				player.getWorld().strikeLightning(player.getLocation().add(50.00D, 25.00D, 50.00D));
 				return true;
 			}
 		}

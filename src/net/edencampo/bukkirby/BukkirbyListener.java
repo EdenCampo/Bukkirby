@@ -39,10 +39,6 @@ public class BukkirbyListener implements Listener
 	}
 
 	List<String> ValidCreatures = new ArrayList<String>();
-	List<Location> invisladders = new ArrayList<Location>();
-	
-	Player moveplayer;
-	Location moveloc;
 	
 	public void addValidCreatures()
 	{
@@ -59,20 +55,6 @@ public class BukkirbyListener implements Listener
 			
 			id++;
 		}
-		
-		/*
-		ValidCreatures.add("creeper");
-		ValidCreatures.add("enderman");
-		ValidCreatures.add("zombie");
-		ValidCreatures.add("skeleton");
-		ValidCreatures.add("spider");
-		ValidCreatures.add("cavespider");
-		ValidCreatures.add("irongolem");
-		ValidCreatures.add("snowgolem");
-		ValidCreatures.add("pigzombie");
-		ValidCreatures.add("blaze");
-		ValidCreatures.add("ghast");
-		*/
 	}
 	
 	@EventHandler
@@ -93,19 +75,16 @@ public class BukkirbyListener implements Listener
 				{
 					p.sendMessage(plugin.KirbyTag + "You hit a " + creature + "! You have received his abilities!");
 					plugin.BKirbyAB.setPlayerAbility(p, "ABILITY_" + creature.toUpperCase());
-					p.sendMessage(plugin.KirbyTag + "DEBUG: " + plugin.BKirbyAB.getCurrentAbility(p));
 					
 					p.getWorld().playEffect(p.getLocation(), Effect.ENDER_SIGNAL, 0);
 					p.getWorld().playEffect(p.getLocation(), Effect.BLAZE_SHOOT, 0);
+					p.getWorld().strikeLightning(p.getLocation().add(50.00D, 25.00D, 50.00D));
 				}
-			}
-			else
-			{
-				p.sendMessage(plugin.KirbyTag + "DEBUG: Invalid Entity! : " + creature);
 			}
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onPlayerRightClick(PlayerInteractEvent e)
 	{
@@ -118,10 +97,11 @@ public class BukkirbyListener implements Listener
 					
 			if(currentability.equalsIgnoreCase("ABILITY_ENDERMAN"))
 			{
-				if(p.getItemInHand().equals(Item.ENDER_PEARL))
+				if(p.getInventory().contains(Item.ENDER_PEARL.id) && p.isOnGround())
 				{
 					Block blockloc = p.getTargetBlock(null, 15);
 					p.teleport(blockloc.getLocation());	
+					p.getWorld().playEffect(p.getLocation(), Effect.SMOKE, 0);
 				}
 			}
 			else if(currentability.equalsIgnoreCase("ABILITY_SKELETON"))
@@ -129,6 +109,7 @@ public class BukkirbyListener implements Listener
 				if(e.getItem() == null)
 				{
 					p.launchProjectile(Arrow.class);
+					p.getWorld().playEffect(p.getLocation(), Effect.BOW_FIRE, 0);
 				}
 			}
 			else if(currentability.equalsIgnoreCase("ABILITY_BLAZE"))
@@ -171,7 +152,7 @@ public class BukkirbyListener implements Listener
 			{
 				double damage = e.getDamage();
 				
-				double newndamage = damage + 5.0;
+				double newndamage = damage + 2.5;
 				
 				e.setDamage(newndamage);
 			}
@@ -240,53 +221,30 @@ public class BukkirbyListener implements Listener
 		}
 	}
 	
-	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onMove(PlayerMoveEvent e)
 	{
 		Player p = e.getPlayer();
-		
-		moveplayer = e.getPlayer();
 		
 		Block blockfacing = p.getTargetBlock(null, 1);
 		
 		double byaxiS = blockfacing.getY();
 		double pyaxiS = p.getLocation().getY();
 		
-		double bxaxiS = blockfacing.getX();
-		double pxaxiS = p.getLocation().getX();
-		
-		if(blockfacing.getType() == Material.AIR || !p.isOnGround())
-		{
-			return;
-		}
-		
-		if(byaxiS > pyaxiS && bxaxiS > pxaxiS)
+		if(byaxiS > pyaxiS)
 		{
 			String currentability = plugin.BKirbyAB.getCurrentAbility(p);
 			
 			if(currentability.equalsIgnoreCase("ABILITY_SPIDER"))
 			{
-				//Bukkit.getServer().broadcastMessage("Blockfacing bxaxiS = " + bxaxiS);
-				//Bukkit.getServer().broadcastMessage("Player pxaxiS = " + pxaxiS);
+				if(blockfacing.getType() == Material.AIR)
+				{	
+					p.setFlying(false);
+					
+					return;
+				}
 				
-				Location loc = p.getLocation();
-				
-				moveloc = p.getLocation();
-				
-				loc.add(0.0D, 1.0D, 0.0D);	
-				moveloc.add(0.0D, 1.0D, 0.0D);	
-				
-				p.sendBlockChange(loc, Material.LADDER, (byte) 0);
-				invisladders.add(loc);
-				
-				loc.add(0.0D, 1.0D, 0.0D);	
-				moveloc.add(0.0D, 1.0D, 0.0D);	
-				
-				p.sendBlockChange(loc, Material.LADDER, (byte) 0);
-				invisladders.add(loc);
-				
-				plugin.getServer().getScheduler().runTaskLater(plugin, plugin.BukkirbySPL, 60L);
+				p.setFlying(true);
 			}
 		}
 	}
